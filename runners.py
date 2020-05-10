@@ -140,7 +140,8 @@ class Runner:
             "accuracy": accuracy
         }
 
-    def run_test(self, dataloader):
+    def run_test(self, dataset):
+        dataloader = get_dataloader(dataset, batch_size=self.rparams.eval_batch_size, train=False)
         self.classifier.eval()
         all_logits = []
         for step, batch in enumerate(tqdm(dataloader, desc="Predictions (Test)")):

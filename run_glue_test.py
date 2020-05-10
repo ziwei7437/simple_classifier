@@ -64,6 +64,7 @@ def main():
 
     runner.classifier.load_state_dict(state_dicts[idx])
     logits = runner.run_test(test_dataset)
+
     df = pd.DataFrame(logits)
     df.to_csv(os.path.join(args.output_dir, "test_preds.csv"), header=False, index=False)
     # HACK for MNLI-mismatched

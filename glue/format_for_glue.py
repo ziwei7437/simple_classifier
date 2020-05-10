@@ -15,6 +15,7 @@ OUTPUT_NAMES = {
     "mnli-mm": "MNLI-mm",
     "qnli": "QNLI",
     "rte": "RTE",
+    "wnli": "WNLI",
 }
 
 
