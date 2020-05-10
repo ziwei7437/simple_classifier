@@ -45,6 +45,7 @@ class Runner:
         self.device = device
         self.training_state = TrainingState()
         self.eval_info = []
+        self.state_dicts = []
         self.rparams = rparams
 
     def run_train_val(self, train_dataset, eval_dataset, mm_eval_set=None, verbose=True):
@@ -68,6 +69,27 @@ class Runner:
             else:
                 self.eval_info.append(result)
         return self.eval_info
+
+    def run_train_val_with_state_dict_returned(self, train_dataset, eval_dataset, mm_eval_set=None, verbose=True):
+        # clear previous results if there were.
+        self.eval_info = []
+        self.state_dicts = []
+
+        # ignore mismatched cases here.
+        if verbose:
+            print("**** run train ****")
+            print("using {}".format(self.device))
+        train_dataloader = get_dataloader(train_dataset, batch_size=self.rparams.train_batch_size)
+        eval_dataloader = get_dataloader(eval_dataset, batch_size=self.rparams.eval_batch_size, train=False)
+
+        # Run train
+        self.classifier.train()
+        for _ in trange(int(self.rparams.num_train_epochs), desc="Epoch"):
+            self.run_train_epoch(train_dataloader)
+            result = self.run_val(eval_dataloader)
+            self.eval_info.append(result)
+            self.state_dicts.append(self.classifier.state_dict())
+        return self.eval_info, self.state_dicts
 
     def run_train_epoch(self, dataloader):
         train_epoch_state = TrainEpochState()
@@ -117,6 +139,19 @@ class Runner:
             "loss": eval_loss,
             "accuracy": accuracy
         }
+
+    def run_test(self, dataloader):
+        self.classifier.eval()
+        all_logits = []
+        for step, batch in enumerate(tqdm(dataloader, desc="Predictions (Test)")):
+            u = batch[0].to(self.device)
+            v = batch[1].to(self.device)
+            with torch.no_grad():
+                logits = self.classifier(u, v)
+            logits = logits.detach().cpu().numpy()
+            all_logits.append(logits)
+        all_logits = np.concatenate(all_logits, axis=0)
+        return all_logits
 
 
 if __name__ == '__main__':
