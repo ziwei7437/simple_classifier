@@ -155,6 +155,53 @@ class Runner:
         return all_logits
 
 
+class InfersentRunner(Runner):
+    def __init__(self, classifier, optimizer, device, rparams: RunnerParameters):
+        super(InfersentRunner, self).__init__(classifier, optimizer, device, rparams)
+
+    def run_train_val_with_state_dict_returned(self, train_dataset, eval_dataset, mm_eval_set=None, verbose=True):
+        """
+        Overwrite for loading separately saved datasets.
+        :param train_dataset: a list of 'TensorDataset'
+        :param eval_dataset: same as parent class. A 'TensorDataset' object.
+        :param mm_eval_set: same as parent class. A 'TensorDataset' object.
+        :param verbose: True for printing info while training.
+        :return: model state_dicts and training info
+        """
+        self.eval_info = []
+        self.state_dicts = []
+
+        # ignore mismatched cases here.
+        if verbose:
+            print("**** run train ****")
+            print("using {}".format(self.device))
+
+        train_dataloaders = []
+        for dataset in train_dataset:
+            train_dataloader = get_dataloader(dataset, batch_size=self.rparams.train_batch_size)
+            train_dataloaders.append(train_dataloader)
+        eval_dataloader = get_dataloader(eval_dataset, batch_size=self.rparams.eval_batch_size, train=False)
+
+        # Run train
+        self.classifier.train()
+        for _ in trange(int(self.rparams.num_train_epochs), desc="Epoch"):
+            for train_dataloader in train_dataloaders:
+                self.run_train_epoch(train_dataloader)
+            result = self.run_val(eval_dataloader)
+            self.eval_info.append(result)
+            self.state_dicts.append(self.classifier.state_dict())
+        return self.eval_info, self.state_dicts
+
+    def run_test(self, datasets):
+        all_logits = []
+        for dataset in datasets:
+            logits = super(InfersentRunner, self).run_test(dataset)
+            all_logits.append(logits)
+        all_logits = np.concatenate(all_logits, axis=0)
+        return all_logits
+
+
+
 if __name__ == '__main__':
     from torch.optim import SGD
     from classifier import simple_classifier
