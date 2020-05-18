@@ -1,6 +1,6 @@
 import logging
 import os
-from turtle import pd
+import pandas as pd
 
 import torch
 from torch.optim import SGD
@@ -89,7 +89,7 @@ def main():
         test_dataset = torch.load(os.path.join(args.data_dir, "test-{}.dataset".format(i)))
         test_datasets.append(test_dataset)
 
-    runner.classifier.load_state_dict(state_dicts[idx])
+    runner.classifier.load_state_dict(torch.load(os.path.join(args.output_dir, "state.p")))
     logits = runner.run_test(test_datasets)
 
     df = pd.DataFrame(logits)

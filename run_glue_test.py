@@ -26,7 +26,7 @@ def main():
     initialization.init_output_dir(args)
     initialization.save_args(args)
 
-    classifier = simple_classifier(n_classes=args.n_classes, n_hidden=768)
+    classifier = simple_classifier(n_classes=args.n_classes, n_hidden=args.fc_dim)
     classifier = classifier.to(device)
 
     optimizer = SGD(classifier.parameters(), lr=0.001, momentum=0.9)
