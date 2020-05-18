@@ -12,15 +12,30 @@ from runners import InfersentRunner, RunnerParameters
 
 
 TRAIN_SET_NUM_MAP = {
-    'snli': 5
+    'snli': 5,
+    'wnli': 1,
+    'rte': 1,
+    'mrpc': 1,
+    'qqp': 3,
+    'mnli': 4,
 }
 
 EVAL_SET_NUM_MAP = {
-    'snli': 1
+    'snli': 1,
+    'wnli': 1,
+    'rte': 1,
+    'mrpc': 1,
+    'qqp': 1,
+    'mnli': 1,
 }
 
 TEST_SET_NUM_MAP = {
-    'snli': 1
+    'snli': 1,
+    'wnli': 1,
+    'rte': 1,
+    'mrpc': 1,
+    'qqp': 4,
+    'mnli': 1,
 }
 
 
