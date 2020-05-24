@@ -4,6 +4,24 @@ import torch.nn as nn
 from torch.nn import CrossEntropyLoss
 
 
+class simple_classifier_individual(nn.Module):
+    def __init__(self, n_classes, n_hidden=768, drop=0.1):
+        super(simple_classifier_individual, self).__init__()
+        self.drop = nn.Dropout(drop)
+        self.n_classes = n_classes
+        self.classifier = nn.Linear(n_hidden, n_classes)
+
+    def forward(self, x, labels=None):
+        x = self.drop(x)
+        logits = self.classifier(x)
+        if labels is not None:
+            loss_fct = CrossEntropyLoss()
+            loss = loss_fct(logits.view(-1, self.n_classes), labels.view(-1))
+            return loss
+        else:
+            return logits
+
+
 class simple_classifier(nn.Module):
     def __init__(self, n_classes, n_hidden, drop=0.1):
         super(simple_classifier, self).__init__()

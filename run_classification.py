@@ -38,6 +38,9 @@ def get_args(*in_args):
                         default='snli',
                         type=str,
                         help="Task Name. Optional. For Infersent usages")
+    parser.add_argument("--use_individual",
+                        action="store_true",
+                        help="Use individual simple classifier.")
 
     # training args for classifier
     parser.add_argument("--force-overwrite", action="store_true")

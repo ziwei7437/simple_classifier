@@ -7,7 +7,7 @@ import torch
 from torch.optim import SGD
 
 import initialization
-from classifier import simple_classifier
+from classifier import simple_classifier, simple_classifier_individual
 from runners import Runner, RunnerParameters
 from run_classification import print_args, get_args
 
@@ -26,7 +26,10 @@ def main():
     initialization.init_output_dir(args)
     initialization.save_args(args)
 
-    classifier = simple_classifier(n_classes=args.n_classes, n_hidden=args.fc_dim)
+    if args.use_individual:
+        classifier = simple_classifier_individual(n_classes=args.n_classes, n_hidden=args.fc_dim)
+    else:
+        classifier = simple_classifier(n_classes=args.n_classes, n_hidden=args.fc_dim)
     classifier = classifier.to(device)
 
     optimizer = SGD(classifier.parameters(), lr=0.001, momentum=0.9)
@@ -45,20 +48,37 @@ def main():
     test_dataset = torch.load(os.path.join(args.data_dir, "test.dataset"))
 
     # run train and validation with state dicts returned
-    eval_info, state_dicts = runner.run_train_val_with_state_dict_returned(
-        train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
-    )
+    if args.mnli:
+        eval_info, state_dicts = runner.run_train_val_with_state_dict_returned(
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            mm_eval_set=torch.load(os.path.join(args.data_dir, "mm_dev.dataset"))
+        )
+    else:
+        eval_info, state_dicts = runner.run_train_val_with_state_dict_returned(
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+        )
 
     torch.save(eval_info, os.path.join(args.output_dir, "training.info"))
 
     # find highest validation results, load model state dict, and then run prediction @ test set.
     val_acc = []
-    for item in eval_info:
-        val_acc.append(item['accuracy'])
-    idx = val_acc.index(max(val_acc))
-    print("highest accuracy on validation is: {}, index = {}. "
-          "Load state dicts and run testing...".format(val_acc[idx], idx))
+    mm_val_acc = []
+    if args.mnli:
+        for item in eval_info:
+            val_acc.append(item[0]['accuracy'])
+            mm_val_acc.append(item[1]['accuracy'])
+        idx = val_acc.index(max(val_acc))
+        print("highest accuracy on validation is: {}, index = {}. \n"
+              "mis-matched is: {} \n"
+              "Load state dicts and run testing...".format(val_acc[idx], idx, mm_val_acc[idx]))
+    else:
+        for item in eval_info:
+            val_acc.append(item['accuracy'])
+        idx = val_acc.index(max(val_acc))
+        print("highest accuracy on validation is: {}, index = {}. \n"
+              "Load state dicts and run testing...".format(val_acc[idx], idx))
 
     torch.save(state_dicts[idx], os.path.join(args.output_dir, "state.p"))
 
