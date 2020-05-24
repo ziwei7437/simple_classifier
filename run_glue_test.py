@@ -40,7 +40,8 @@ def main():
                         num_train_epochs=args.num_train_epochs,
                         train_batch_size=args.train_batch_size,
                         eval_batch_size=args.eval_batch_size,
-                    ))
+                    ),
+                    use_individual=args.use_individual)
 
     # dataset
     train_dataset = torch.load(os.path.join(args.data_dir, "train.dataset"))
