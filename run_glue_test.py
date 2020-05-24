@@ -18,7 +18,7 @@ def main():
                         level=logging.INFO)
     logger = logging.getLogger(__name__)
     args = get_args()
-    print_args(args)
+    # print_args(args)
 
     device, n_gpu = initialization.init_cuda_from_args(args, logger=logger)
     initialization.init_seed(args, n_gpu=n_gpu, logger=logger)

@@ -1,0 +1,19 @@
+tasks:
+  - mrpc
+  - rte
+  - wnli
+
+type:
+  - MRPC
+  - QQP
+  - MNLI
+  - SNLI
+  - QNLI
+  - RTE
+  - WNLI
+
+folders:
+  - qqp
+  - mnli
+  - snli
+  - qnli

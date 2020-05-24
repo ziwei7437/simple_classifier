@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
-from tqdm import tqdm, trange
+from tqdm.auto import tqdm, trange
 import numpy as np
 
 
@@ -60,7 +60,7 @@ class Runner:
 
         # run train
         self.classifier.train()
-        for _ in trange(int(self.rparams.num_train_epochs), desc="Epoch"):
+        for _ in range(int(self.rparams.num_train_epochs), desc="Epoch"):
             self.run_train_epoch(train_dataloader)
             result = self.run_val(eval_dataloader)
             if mm_eval_set is not None:
@@ -99,7 +99,7 @@ class Runner:
 
     def run_train_epoch(self, dataloader):
         train_epoch_state = TrainEpochState()
-        for step, batch in enumerate(tqdm(dataloader)):
+        for step, batch in enumerate(dataloader):
             if not self.use_individual:
                 u = batch[0].to(self.device)
                 v = batch[1].to(self.device)
@@ -127,7 +127,7 @@ class Runner:
         all_logits, all_labels = [], []
         total_eval_loss = 0
         nb_eval_steps = 0
-        for step, batch in enumerate(tqdm(dataloader)):
+        for step, batch in enumerate(dataloader):
             if not self.use_individual:
                 u = batch[0].to(self.device)
                 v = batch[1].to(self.device)
@@ -161,7 +161,7 @@ class Runner:
         dataloader = get_dataloader(dataset, batch_size=self.rparams.eval_batch_size, train=False)
         self.classifier.eval()
         all_logits = []
-        for step, batch in enumerate(tqdm(dataloader, desc="Predictions (Test)")):
+        for step, batch in enumerate(dataloader):
             if not self.use_individual:
                 u = batch[0].to(self.device)
                 v = batch[1].to(self.device)
