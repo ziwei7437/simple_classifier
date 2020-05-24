@@ -39,7 +39,7 @@ class RunnerParameters:
 
 
 class Runner:
-    def __init__(self, classifier, optimizer, device, rparams:RunnerParameters):
+    def __init__(self, classifier, optimizer, device, rparams:RunnerParameters, use_individual=False):
         self.classifier = classifier
         self.optimizer = optimizer
         self.device = device
@@ -47,6 +47,7 @@ class Runner:
         self.eval_info = []
         self.state_dicts = []
         self.rparams = rparams
+        self.use_individual = use_individual
 
     def run_train_val(self, train_dataset, eval_dataset, mm_eval_set=None, verbose=True):
         if verbose:
@@ -99,12 +100,16 @@ class Runner:
     def run_train_epoch(self, dataloader):
         train_epoch_state = TrainEpochState()
         for step, batch in enumerate(tqdm(dataloader)):
-            u = batch[0].to(self.device)
-            v = batch[1].to(self.device)
-            label = batch[2].to(self.device)
-            loss = self.classifier(u, v, label)
+            if not self.use_individual:
+                u = batch[0].to(self.device)
+                v = batch[1].to(self.device)
+                label = batch[2].to(self.device)
+                loss = self.classifier(u, v, label)
+            else:
+                emb = batch[0].to(self.device)
+                label = batch[1].to(self.device)
+                loss = self.classifier(emb, label)
             loss.backward()
-
             self.training_state.tr_loss.append(loss.item())
             # print("Mini-batch Loss: {:.4f}".format(self.training_state.tr_loss[-1]))
 
@@ -123,12 +128,19 @@ class Runner:
         total_eval_loss = 0
         nb_eval_steps = 0
         for step, batch in enumerate(tqdm(dataloader)):
-            u = batch[0].to(self.device)
-            v = batch[1].to(self.device)
-            label = batch[2].to(self.device)
-            with torch.no_grad():
-                tmp_eval_loss = self.classifier(u, v, label)
-                logits = self.classifier(u, v)
+            if not self.use_individual:
+                u = batch[0].to(self.device)
+                v = batch[1].to(self.device)
+                label = batch[2].to(self.device)
+                with torch.no_grad():
+                    tmp_eval_loss = self.classifier(u, v, label)
+                    logits = self.classifier(u, v)
+            else:
+                emb = batch[0].to(self.device)
+                label = batch[1].to(self.device)
+                with torch.no_grad():
+                    tmp_eval_loss = self.classifier(emb, label)
+                    logits = self.classifier(emb)
             total_eval_loss += tmp_eval_loss.mean().item()
             label = label.cpu().numpy()
             logits = logits.detach().cpu().numpy()
@@ -150,10 +162,15 @@ class Runner:
         self.classifier.eval()
         all_logits = []
         for step, batch in enumerate(tqdm(dataloader, desc="Predictions (Test)")):
-            u = batch[0].to(self.device)
-            v = batch[1].to(self.device)
-            with torch.no_grad():
-                logits = self.classifier(u, v)
+            if not self.use_individual:
+                u = batch[0].to(self.device)
+                v = batch[1].to(self.device)
+                with torch.no_grad():
+                    logits = self.classifier(u, v)
+            else:
+                emb = batch[0].to(self.device)
+                with torch.no_grad():
+                    logits = self.classifier(emb)
             logits = logits.detach().cpu().numpy()
             all_logits.append(logits)
         all_logits = np.concatenate(all_logits, axis=0)
