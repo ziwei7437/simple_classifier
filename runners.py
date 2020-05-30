@@ -203,13 +203,19 @@ class InfersentRunner(Runner):
             train_dataloader = get_dataloader(dataset, batch_size=self.rparams.train_batch_size)
             train_dataloaders.append(train_dataloader)
         eval_dataloader = get_dataloader(eval_dataset, batch_size=self.rparams.eval_batch_size, train=False)
+        if mm_eval_set != None:
+            mm_eval_dataloader = get_dataloader(mm_eval_set, batch_size=self.rparams.eval_batch_size, train=False)
 
         # Run train
-        self.classifier.train()
         for _ in trange(int(self.rparams.num_train_epochs), desc="Epoch"):
+            self.classifier.train()
             for train_dataloader in train_dataloaders:
                 self.run_train_epoch(train_dataloader)
+            # run validation after each epoch
             result = self.run_val(eval_dataloader)
+            if mm_eval_set != None:
+                mm_result = self.run_val(mm_eval_dataloader)
+                result = (result, mm_result)
             self.eval_info.append(result)
             self.state_dicts.append(self.classifier.state_dict())
         return self.eval_info, self.state_dicts

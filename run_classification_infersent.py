@@ -91,11 +91,21 @@ def main():
 
     # find highest validation results, load model state dict, and then run prediction @ test set.
     val_acc = []
-    for item in eval_info:
-        val_acc.append(item['accuracy'])
-    idx = val_acc.index(max(val_acc))
-    print("highest accuracy on validation is: {}, index = {}. "
-          "Load state dicts and run testing...".format(val_acc[idx], idx))
+    mm_val_acc = []
+    if args.mnli:
+        for item in eval_info:
+            val_acc.append(item[0]['accuracy'])
+            mm_val_acc.append(item[1]['accuracy'])
+        idx = val_acc.index(max(val_acc))
+        print("highest accuracy on validation is: {}, index = {}. \n"
+              "mis-matched is: {} \n"
+              "Load state dicts and run testing...".format(val_acc[idx], idx, mm_val_acc[idx]))
+    else:
+        for item in eval_info:
+            val_acc.append(item['accuracy'])
+        idx = val_acc.index(max(val_acc))
+        print("highest accuracy on validation is: {}, index = {}. \n"
+              "Load state dicts and run testing...".format(val_acc[idx], idx))
 
     torch.save(state_dicts[idx], os.path.join(args.output_dir, "state.p"))
 

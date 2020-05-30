@@ -33,3 +33,31 @@ f.close()
 #         os.system(command)
 #         print("{} - {}".format(type, task))
 
+tasks = ['qqp', 'mnli', 'snli', 'qnli']
+ns = ['2', '3', '3', '2']
+for task, n in zip(tasks, ns):
+    if task == 'mnli':
+        command = '''
+        python run_glue_test.py \
+        --mnli True \
+        --data_dir ../bert_embeddings_individual/qqp_{} \
+        --output_dir ../simple_classifier_output_individual/QQP/{} \
+        --use_individual \
+        --force-overwrite \
+        --num_train_epochs 20 \
+        --n_classes {} \
+        --verbose
+        '''.format(task, task, n)
+    else:
+        command = '''
+        python run_glue_test.py \
+        --data_dir ../bert_embeddings_individual/qqp_{} \
+        --output_dir ../simple_classifier_output_individual/QQP/{} \
+        --use_individual \
+        --force-overwrite \
+        --num_train_epochs 20 \
+        --n_classes {} \
+        --verbose
+        '''.format(task, task, n)
+    os.system(command)
+    print("{} - {}".format("qqp", task))
